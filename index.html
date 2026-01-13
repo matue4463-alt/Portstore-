@@ -1,0 +1,106 @@
+<!DOCTYPE html><html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portstore Android</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body { margin:0; font-family:Arial, Helvetica, sans-serif; background:#0b0f19; color:#e5e7eb; }
+    header { background:#020617; padding:20px; display:flex; justify-content:space-between; align-items:center; }
+    nav a { color:#c7d2fe; margin-left:15px; text-decoration:none; font-weight:bold; }
+    .hero { padding:60px 20px; text-align:center; background:linear-gradient(135deg,#1e3a8a,#020617); }
+    .container { max-width:1100px; margin:40px auto; padding:0 20px; }
+    .box { background:#020617; padding:20px; border-radius:10px; max-width:400px; margin:0 auto 40px; }
+    input, button { width:100%; margin-top:10px; padding:10px; border:none; border-radius:6px; }
+    button { font-weight:bold; cursor:pointer; background:#2563eb; color:#fff; }
+    .hidden { display:none; }
+    footer { background:#020617; text-align:center; padding:20px; color:#94a3b8; font-size:14px; }
+  </style>
+</head>
+<body><header>
+  <h2>Portstore</h2>
+  <nav>
+    <span id="userInfo"></span>
+    <a href="#" id="logoutBtn" class="hidden">Sair</a>
+  </nav>
+</header><section class="hero">
+  <h1>Portstore Android</h1>
+  <p>Crie sua conta para publicar portes e projetos</p>
+</section><div class="container">  <div id="authBox" class="box">
+    <h3>Criar conta / Entrar</h3>
+    <input type="text" id="displayName" placeholder="Nome visual (obrigatório)" />
+    <input type="email" id="email" placeholder="Email" />
+    <input type="password" id="password" placeholder="Senha" />
+    <button onclick="signUp()">Criar conta</button>
+    <button onclick="signIn()" style="background:#1e40af">Entrar</button>
+    <p id="msg" style="margin-top:10px;font-size:14px;"></p>
+  </div>  <div id="loggedBox" class="box hidden">
+    <h3>Você está logado</h3>
+    <p id="welcome"></p>
+    <div style="margin-top:20px">
+      <input type="text" id="search" placeholder="🔍 Pesquisar portes..." oninput="filterGames()" />
+    </div>
+    <div id="gamesList" style="margin-top:20px"></div>
+  </div></div><footer>
+  <p>Portstore © 2026</p>
+</footer><script>
+  // COLE AQUI OS DADOS DO SUPABASE
+  const SUPABASE_URL = "SUA_SUPABASE_URL";
+  const SUPABASE_KEY = "SUA_PUBLIC_ANON_KEY";
+
+  const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  async function signUp() {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const displayName = document.getElementById('displayName').value;
+
+    if (!displayName) {
+      document.getElementById('msg').textContent = 'Nome visual é obrigatório';
+      return;
+    }
+
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { display_name: displayName }
+      }
+    });
+
+    document.getElementById('msg').textContent = error ? error.message : 'Conta criada! Agora faça login.';
+  } = await supabase.auth.signUp({ email, password });
+    document.getElementById('msg').textContent = error ? error.message : 'Conta criada! Agora faça login.';
+  }
+
+  async function signIn() {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    document.getElementById('msg').textContent = error ? error.message : 'Login realizado!';
+  }
+
+  document.getElementById('logoutBtn').onclick = async () => {
+    await supabase.auth.signOut();
+    location.reload();
+  };
+
+  function filterGames() {
+    const q = document.getElementById('search').value.toLowerCase();
+    document.querySelectorAll('.game').forEach(g => {
+      g.style.display = g.dataset.name.includes(q) ? 'block' : 'none';
+    });
+  }
+
+  supabase.auth.onAuthStateChange((_event, session) => {
+    if (session) {
+      document.getElementById('authBox').classList.add('hidden');
+      document.getElementById('loggedBox').classList.remove('hidden');
+      document.getElementById('logoutBtn').classList.remove('hidden');
+      const name = session.user.user_metadata.display_name || session.user.email;
+      document.getElementById('userInfo').textContent = name;
+      document.getElementById('welcome').textContent = `Bem-vindo, ${name}`;
+    }
+  });
+</script></body>
+  </html>
