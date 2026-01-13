@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Portstore</title>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f5f5f5;
+  padding: 20px;
+}
+
+h1 { font-size: 32px; }
+
+.jogo {
+  background: #fff;
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 6px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.jogo img {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+input, button {
+  padding: 8px;
+  margin: 5px 0;
+  width: 100%;
+  max-width: 300px;
+}
+
+button { cursor: pointer; }
+
+#formJogo { display: none; background: #fff; padding: 15px; border-radius: 6px; }
+
+#erro { color: red; }
+</style>
+</head>
+
+<body>
+
+<h1>Portstore</h1>
+<p>Ports de jogos Android</p>
+
+<h2>Jogos</h2>
+<div id="listaJogos"></div>
+
+<hr>
+
+<h2>Enviar jogo</h2>
+<input id="senhaEnvio" type="password" placeholder="Senha">
+<button onclick="verificarSenha()">Enviar</button>
+<p id="erro"></p>
+
+<div id="formJogo">
+  <h3>Novo jogo</h3>
+
+  <input id="nomeJogo" placeholder="Nome do jogo">
+
+  <input id="linkJogo" placeholder="Link do download">
+
+  <p><b>Capa por link (opcional)</b></p>
+  <input id="capaLink" placeholder="Link da imagem">
+
+  <p><b>OU upload da imagem</b></p>
+  <input id="capaArquivo" type="file" accept="image/*">
+
+  <button onclick="publicarJogo()">Publicar</button>
+</div>
+
+<script>
+const senhaCorreta = "20180620"
+const lista = document.getElementById("listaJogos")
+
+function verificarSenha() {
+  const senha = document.getElementById("senhaEnvio").value
+  if (senha === senhaCorreta) {
+    document.getElementById("formJogo").style.display = "block"
+    document.getElementById("erro").innerText = ""
+  } else {
+    document.getElementById("erro").innerText = "Senha incorreta"
+  }
+}
+
+function salvarJogos(jogos) {
+  localStorage.setItem("portstore_jogos", JSON.stringify(jogos))
+}
+
+function carregarJogos() {
+  return JSON.parse(localStorage.getItem("portstore_jogos")) || []
+}
+
+function renderizarJogos() {
+  lista.innerHTML = ""
+
+  // Undertale fixo
+  adicionarJogoTela(
+    "Undertale",
+    "https://i.imgur.com/9XqZQZp.png",
+    "https://www.mediafire.com/"
+  )
+
+  const jogos = carregarJogos()
+  jogos.forEach(j => adicionarJogoTela(j.nome, j.capa, j.link))
+}
+
+function adicionarJogoTela(nome, capa, link) {
+  const div = document.createElement("div")
+  div.className = "jogo"
+  div.innerHTML = `
+    <img src="${capa}">
+    <div>
+      <strong>${nome}</strong><br>
+      <a href="${link}" target="_blank">Download</a>
+    </div>
+  `
+  lista.appendChild(div)
+}
+
+function publicarJogo() {
+  const nome = nomeJogo.value
+  const link = linkJogo.value
+  const capaLink = document.getElementById("capaLink").value
+  const capaArquivo = document.getElementById("capaArquivo").files[0]
+
+  if (!nome || !link) {
+    alert("Preencha nome e link")
+    return
+  }
+
+  if (capaArquivo) {
+    const reader = new FileReader()
+    reader.onload = () => salvarPublicacao(nome, reader.result, link)
+    reader.readAsDataURL(capaArquivo)
+  } else if (capaLink) {
+    salvarPublicacao(nome, capaLink, link)
+  } else {
+    alert("Coloque uma capa")
+  }
+}
+
+function salvarPublicacao(nome, capa, link) {
+  const jogos = carregarJogos()
+  jogos.push({ nome, capa, link })
+  salvarJogos(jogos)
+  renderizarJogos()
+
+  nomeJogo.value = ""
+  linkJogo.value = ""
+  capaLink.value = ""
+  capaArquivo.value = ""
+}
+
+renderizarJogos()
+</script>
+
+</body>
+</html>
